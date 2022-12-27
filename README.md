@@ -43,13 +43,15 @@ $ pip install -r requirements.txt
 ```
 
 ```bash
-pip3 install openmim
-mim install mmcv-full
-git clone https://github.com/open-mmlab/mmaction2.git
-cd mmaction2
-pip3 install -e .
+$ pip3 install openmim
+$ mim install mmcv-full
+$ git clone https://github.com/open-mmlab/mmaction2.git
+$ cd mmaction2
+$ pip3 install -e .
 ```
-
+```bash
+$ sed -i 's/%Y%m%d_%H%M%S/%Y%m%d_%H%M%S%f/g' tools/misc/clip_feature_extraction.py
+```
 
 # 실행 방법 (예시)
 ❏ 훈련 방법입니다.
