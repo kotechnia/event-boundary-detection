@@ -1,13 +1,9 @@
-# Contranstive Learning Approach (CLA)
+# Generic Event Boundary Detection (GEBD)
 
-❏ CLA의 구조는 다음과 같습니다.
+❏ GEBD 구조는 다음과 같습니다.
 ```
-📂CLA 
-├─ 📂data
-├─ 📂ensemble
-├─ 📂sf_tsn_each_branch
-├─ 📂using_similarity_map
-├─ 📂cla ( for nia2022 )
+📂GEBD 
+├─ 📂cla ( GEBD model for nia2022 )
 │   ├─ 📄config.py
 │   ├─ 📄dataset.py
 │   ├─ 📄main.py
@@ -21,13 +17,34 @@
 
 ❏ 테스트 시스템 사양은 다음과 같습니다.
 ```
+Ubuntu 22.04 LTS
+Python 3.8.10 
+Torch 1.8.1+cu111 
+CUDA 11.1
+cuDnn 8.2.0    
 ```
 
 ❏ 사용 라이브러리 및 프로그램입니다.
 ```bash
-$ pip install torch==1.8.1+cu111 -f https://download.pytorch.org/whl/torch_stable.html
-$ pip install numpy==1.19.2 matplotlib==3.4.1 tqdm
+$ cat requirements.txt
+
+torch==1.8.1+cu111 -f https://download.pytorch.org/whl/torch_stable.html
+torchvision==0.9.1+cu111 -f https://download.pytorch.org/whl/torch_stable.html
+tqdm
+parmap
+openmim
+
+$ pip install -r requirements.txt
 ```
+
+```bash
+pip3 install openmim
+mim install mmcv-full
+git clone https://github.com/open-mmlab/mmaction2.git
+cd mmaction2
+pip3 install -e .
+```
+
 
 # 실행 방법 (예시)
 ❏ 훈련 방법입니다.
@@ -36,14 +53,12 @@ python main.py
 ```
 
 ❏ 평가 방법입니다.(validation)
-```bash
 python validation.py \
 --model < MODEL_PATH > \
---sigma < float > \
---fold < int >
+--sigma < float > 
 ```
 
 ❏ 평가 방법입니다.(test)
 ```bash
-python test1.py --model < MODEL_PATH >
+python test.py --model < MODEL_PATH >
 ```
