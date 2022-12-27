@@ -12,6 +12,8 @@
 │   ├─ 📄test.py
 │   ├─ 📄validate.py
 │   └─ 📄validation.py
+├─ 📂mmaction2 ( video preprocess module )
+├─ 📂prepare 
 └─ 📄README.md
 ```
 
