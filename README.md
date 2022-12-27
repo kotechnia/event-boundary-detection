@@ -71,5 +71,5 @@ python test.py --model < MODEL_PATH >
 
 
 # Original and Reference
-[contrastive learning approach](https://github.com/hello-jinwoo/LOVEU-CVPR2021)
-[mmaction2](https://github.com/open-mmlab/mmaction2)
+- [contrastive learning approach](https://github.com/hello-jinwoo/LOVEU-CVPR2021)  
+- [mmaction2](https://github.com/open-mmlab/mmaction2)
