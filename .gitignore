@@ -1,6 +1,14 @@
 **/__pycache__
+**/.ipynb_checkpoints
+**/*.ipynb
+**/*.back
+**/*.log
 
-# preprocess module mmaction2
 mmaction2
 
+prepare/fake_ann*
+
 cla/data
+
+data
+!data/dump

@@ -6,10 +6,12 @@ import os
 def validate(pred_dict, n_fold, score_type='validation'):
     # load GT files
 
-    with open(ANNOTATION_PATH, 'r', encoding='utf-8-sig') as f:
+    #with open(ANNOTATION_PATH, 'r', encoding='utf-8-sig') as f:
+    with open(ANNOTATION_PATH, 'r') as f:
         gt_dict = json.load(f)
 
-    with open(FILE_LIST, 'r', encoding='utf-8-sig') as f:
+    #with open(FILE_LIST, 'r', encoding='utf-8-sig') as f:
+    with open(FILE_LIST, 'r') as f:
         filenames = json.load(f)[score_type]
 
     # recall precision f1 for threshold 0.05(5%)

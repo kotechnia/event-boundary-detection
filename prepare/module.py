@@ -7,6 +7,7 @@ def video_segmentation(video_path, temp_dir):
     
     video_name = os.path.basename(video_path)
     video_name, _ = os.path.splitext(video_name)
+    video_name = video_name.strip()
     
     if os.path.isdir(temp_dir):
         pass
@@ -31,7 +32,6 @@ def video_segmentation(video_path, temp_dir):
         if 'moov atom not found' in output: 
             print(f'{video_path} : moov atom not found')
             return video_path, 'moov atom not found'
-
         elif 'Failed to open segment' in output:
             print(f'{video_path} : Failed to open segment')
             return video_path, 'Failed to open segment'

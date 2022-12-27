@@ -1,7 +1,7 @@
 import json
 
-FILE_LIST = './data/dataset_list_145000_18125_18125_1226.json'
-ANNOTATION_PATH = './data/all_data_1226.json'
+FILE_LIST = './../data/dataset_split_list.json'
+ANNOTATION_PATH = './../data/all_data.json'
 
 DATA_PATH = '.'
 MODEL_SAVE_PATH = './models/'
@@ -44,6 +44,37 @@ TEST_THRESHOLD = 0.35
 GOAL_SCORE = 0.815 # Train ends when validation score gets here
 
 #PATIENCE = 15 # Patience for early stopping
-PATIENCE = 40 # Patience for early stopping
+PATIENCE = 20 # Patience for early stopping
 
 NUM_WORKERS = 0
+
+
+if __name__ == '__main__':
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--FILE_LIST')
+    parser.add_argument('--ANNOTATION_PATH')
+    args = parser.parse_args()
+    args = vars(args)
+    arg_keys = list(args.keys())
+
+    with open(__file__, 'r') as f:
+        lines = f.readlines()
+
+    for i in range(len(lines)):
+        line = lines[i]
+        try:
+            key, value = line.split('=')
+            key = key.strip()
+        except ValueError as e:
+            continue
+
+        if key in arg_keys:
+            if args[key] is not None:
+                print(f'- {lines[i]}', end='')
+                lines[i] = f"{key} = '{args[key]}'\n"
+                print(f'+ {lines[i]}', end='')
+
+    with open(__file__, 'w') as f:
+        for line in lines:
+            f.write(line)

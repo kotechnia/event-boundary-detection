@@ -1,9 +1,11 @@
+
 import os
 import subprocess
 from glob import glob
 import pandas as pd
 from module import *
 import parmap
+from tqdm.notebook import tqdm
 
 
 MMACTION_DIR = '../mmaction2/'
@@ -19,20 +21,7 @@ CHECKPOINT = {
 }
 
 
-
-
-def video_path_to_output_path_dir(video_path):
-    """
-input:
-    video_path
-to 
-output:
-    feature_path
-    """
-
-    output_path = video_path.split('/')
-    output_path = '/'.join(output_path)
-
+def video_path_to_output_path_dir(video_path, output_path):
     output_dir = os.path.dirname(output_path)
     output_path, ext = os.path.splitext(output_path)
     
@@ -44,15 +33,13 @@ output:
         
     return output_path, output_dir
 
-
-def example(video_path, feature_type='tsn'):
-    #video_path = '/mnt/hdd8t/nia2022_1-2_data/videos/일상/220722/D2_DA_0722_000074.mp4'
+def example(video_path, feature_path, feature_type='tsn'):
     
     output_path = None
     
-    output_name, output_dir = video_path_to_output_path_dir(video_path)
-    print(video_path)
-    print(output_name)
+    output_name, output_dir = video_path_to_output_path_dir(video_path, feature_path)
+    #print(video_path)
+    #print(output_name)
     
     temp_video_list_path, temp_video_list = video_segmentation(
         video_path = video_path,
@@ -66,10 +53,12 @@ def example(video_path, feature_type='tsn'):
             feature_type = feature_type 
         )
     except (subprocess.CalledProcessError) as e:
+        output_path = None
         print(e)
         print(output_name)
 
     _ = delete_temporary_file(temp_video_list_path)
+    
     return output_path
 
 def process_function(params):
@@ -77,45 +66,74 @@ def process_function(params):
     "----------------------------------------------------------------------"
     
     video_path = value['video_path']
-    #feature_path = example(video_path, feature_type='slowfast')
-    feature_path = example(video_path, feature_type='tsn')
+    feature_path = value['feature_path']
+    #feature_path = example(video_path, feature_path, feature_type='slowfast')
+    feature_path = example(video_path, feature_path, feature_type='tsn')
     value['feature_path'] = feature_path
     
     "----------------------------------------------------------------------"
     return value
 
 
+def get_key(path):
+    path = os.path.basename(path)
+    key, _ = os.path.splitext(path)
+    key = key.split('_')
+    if key[-1] in ['slowfast', 'tsn']:
+        key = key[:-1]
+    key = "_".join(key)
+    key = key.strip()
+    return key
+
+
+def get_videos(video_root):
+    video_root = os.path.join(video_root, '**/*.mp4')
+    df_videos = glob(video_root, recursive=True)
+    df_videos = pd.DataFrame({'video_path':df_videos})
+    df_videos['video_id'] = df_videos['video_path'].map(get_key)
+    df_videos = df_videos.sort_values(by=['video_path']).reset_index(drop=True)
+    df_videos = df_videos.drop_duplicates(subset=['video_id']).reset_index(drop=True)
+    print(f"Detect video files : {df_videos.shape[0]}")
+    return df_videos
+
+def get_features(feature_root):
+    feature_root = os.path.join(feature_root, '**/*_tsn.pkl')
+    df_features = glob(feature_root, recursive=True)
+    df_features = pd.DataFrame({'feature_path':df_features})
+    df_features['video_id'] = df_features['feature_path'].map(get_key)
+    df_features = df_features.sort_values(by=['feature_path']).reset_index(drop=True)
+    df_features = df_features.drop_duplicates(subset=['video_id']).reset_index(drop=True)
+    print(f"Detect feature files : {df_features.shape[0]}")
+    return df_features
+
+
 if __name__ == '__main__':
     import argparse
 
-    parser = argparse.ArgumentParser(description='Process some integers.')
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--video_root_path')
+    parser.add_argument('--feature_root_path')
     parser.add_argument('--gpu', default=0)
-    parser.add_argument('--core', default=10)
+    parser.add_argument('--core', default=3)
+    
     args = parser.parse_args()
 
 
     os.environ['CUDA_VISIBLE_DEVICES'] = str(args.gpu)
     
-    def get_key(path):
-        key = os.path.basename(path)
-        key, _ = os.path.splitext(key)
-        key = key.split('_')
-        if key[-1] in ['tsn', 'slowfast']:
-	        key = key[:-1]
-        key = '_'.join(key)
-        return key
-
-    videos = glob('../data/**/*.mp4', recursive=True)
-    features = glob('../data/**/*_tsn.pkl', recursive=True)
-	
-    videos = pd.DataFrame({'video_path':videos})
-    videos['key'] = videos['video_path'].map(get_key)
-    features = pd.DataFrame({'feature_path':features})
-    features['key'] = features['feature_path'].map(get_key)
-    videos = pd.merge(videos, features, on='key', how='outer')
-    videos = videos[videos['feature_path'].isnull()].reset_index(drop=True)
     
-    process_params = [videos.loc[i].to_dict() for i in reversed(range(len(videos)))]
+    df_videos = get_videos(args.video_root_path)
+    df_features = get_features(args.feature_root_path)
+    
+    df_videos = pd.merge(df_videos, df_features, on=['video_id'], how='outer')
+    df_videos = df_videos[df_videos['feature_path'].isnull()].reset_index(drop=True)
+    print(f"Process the remaining unprocessed {df_videos.shape[0]} videos")
+    
+    for i in tqdm(range(len(df_videos))):
+        df_videos.loc[i, 'feature_path'] = df_videos.loc[i, 'video_path'].replace(args.video_root_path, args.feature_root_path)
+    
+    process_params = [df_videos.loc[i].to_dict() for i in reversed(range(len(df_videos)))]
     result = parmap.map(process_function, process_params, pm_pbar=True, pm_processes=int(args.core))
     print(pd.DataFrame(result))
+
 
