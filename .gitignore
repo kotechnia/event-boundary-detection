@@ -9,6 +9,7 @@ mmaction2
 prepare/fake_ann*
 
 cla/data
+cla/models
 
 data
 !data/dump
