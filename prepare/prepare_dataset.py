@@ -7,9 +7,9 @@ import json
 from tqdm import tqdm
 import argparse
 
-
 def get_time(time_string):
-    _time = datetime.strptime(time_string, "%M:%S.%f")
+    _time = time_string.strip()
+    _time = datetime.strptime(_time, "%M:%S.%f")
     _time = _time.minute * 60. + _time.second * 1. + _time.microsecond * 1e-6
     return _time
 
@@ -20,6 +20,7 @@ def get_key(path):
     if key[-1] in ['slowfast', 'tsn']:
         key = key[:-1]
     key = "_".join(key)
+    key = key.strip()
     return key
 
 def main(args):
@@ -45,6 +46,7 @@ def main(args):
     df_features = df_features.drop_duplicates(subset=['video_id'], keep='last').reset_index(drop=True)
     video_id_to_feature_path = df_features.set_index('video_id').to_dict()['feature_path']
     
+    df_all_data['error'] = None
     all_data = {}
     for i in tqdm(range(len(df_all_data)), desc="Prepare dataset"):
         try:
@@ -54,24 +56,38 @@ def main(args):
             trigger_info = data['trigger_info']
             for j in range(len(trigger_info)):
                 timestamps = trigger_info[j]['timestamps']
-                trigger_info[j]['start'] = get_time(timestamps[0])
                 try:
-                    trigger_info[j]['end'] = get_time(timestamps[1])
-                except (IndexError) as e:
-                    trigger_info[j]['end'] = get_time(timestamps[0])
+                    trigger_info[j]['start'] = get_time(timestamps[0])
+                    try:
+                        trigger_info[j]['end'] = get_time(timestamps[1])
+                    except (IndexError) as e:
+                        trigger_info[j]['end'] = get_time(timestamps[0])
+                except (ValueError) as e:
+                    continue
 
             local_df = pd.DataFrame(trigger_info)
             change_cuts = local_df.loc[local_df['trigger'] == "Change due to cut"]
             change_cuts = np.unique(change_cuts[['start', 'end']]).tolist()
-            change_cuts = [x for x in change_cuts if x not in [0., data['duration']] ]
+            change_cuts_prev = change_cuts.copy()
+            change_cuts = []
+            for x in change_cuts_prev:
+                if x > 0. and x < data['duration']:
+                    change_cuts.append(x)
 
             change_acts = local_df.loc[local_df['trigger'] == "Change of action"]
             change_acts = np.unique(change_acts[['start', 'end']]).tolist()
-            change_acts = [x for x in change_acts if x not in [0., data['duration']] ]
+            change_acts_prev = change_acts.copy()
+            change_acts = []
+            for x in change_acts_prev:
+                if x > 0. and x < data['duration']:
+                    change_acts.append(x)
 
             change_events = change_acts + change_cuts
             change_events = np.unique(change_events).tolist()
             change_events = sorted(change_events)
+
+            if len(change_events) < 0 :
+                raise Exception('event does not exist')
 
             key = get_key(data['video_name'])
             fps = float(data['frame_rate'])
@@ -89,7 +105,14 @@ def main(args):
                 'substages_timestamps':[change_events],
             }
         except Exception as e:
-            pass
+            df_all_data.loc[i, 'error'] = f'{e}'
+            pass 
+
+    if True:
+        tt=df_all_data.loc[~df_all_data['error'].isnull()]
+        tt[['video_name', 'error']].to_excel('error_check.xlsx')
+        
+        
         
     all_fold = {}
     for video_id in tqdm(all_data.keys(), desc='Match feature embedding'):
