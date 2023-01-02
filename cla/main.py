@@ -223,11 +223,19 @@ if __name__ == '__main__':
                     durations = durations.numpy()
 
                     boundary_list = [[] for _ in range(len(out))]
-                    for i, j in idx:
-                        duration = durations[i]
-                        first = TIME_UNIT/2
-                        if first + TIME_UNIT*j < duration:
-                            boundary_list[i].append(first + TIME_UNIT*j)
+                    try:
+                        for i, j in idx:
+                            duration = durations[i]
+                            first = TIME_UNIT/2
+                            if first + TIME_UNIT*j < duration:
+                                boundary_list[i].append(first + TIME_UNIT*j)
+                    except ValueError as e:
+                        for j in idx:
+                            duration = durations[0]
+                            first = TIME_UNIT/2
+                            if first + TIME_UNIT*j < duration:
+                                boundary_list[0].append(first + TIME_UNIT*j)
+
                     for i, boundary in enumerate(boundary_list):
                         #filename = filenames[i]
                         filename = os.path.basename(filenames[i])
@@ -254,7 +262,7 @@ if __name__ == '__main__':
                     fold_done_flag = True
                 test_threshold = max_value + 0.0005
 
-                description = f'kang_v2_fold_{fold}_s_{s}_'
+                description = f'cla_f_{fold}_s_{s}_'
 
                 print(f'conducting test! : val-f1: {f1_results[max_key]}')
                 val_dict = val_dicts[max_key]
