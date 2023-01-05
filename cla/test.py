@@ -10,7 +10,6 @@ from config import *
 from validation import validate
 import argparse
 
-device = torch.device('cuda')
 
 if __name__ == "__main__":
     network_list=[]
@@ -18,8 +17,10 @@ if __name__ == "__main__":
     
     parser = argparse.ArgumentParser()
     parser.add_argument('--model', default='')
+    parser.add_argument('--results_json', default='')
     args = parser.parse_args()
 
+    device = torch.device('cuda')
     load_model = torch.load(args.model).to(device)
     network_list.append(load_model)
 
@@ -99,13 +100,14 @@ if __name__ == "__main__":
     prec_results[s] = prec
     rec_results[s] = rec
 
-
     print(f'f1: {f1_results}')
     print(f'precision: {prec_results}')
     print(f'recall: {rec_results}')
 
 
-    with open(os.path.join(MODEL_SAVE_PATH,'results/test_ensemble_1') + str(max_value)[2:6]+ '.pkl', 'wb') as f:
-        pickle.dump(test_dict, f)
+    #with open(os.path.join(MODEL_SAVE_PATH,'results/test_ensemble_1') + str(max_value)[2:6]+ '.pkl', 'wb') as f:
+    with open(args.results_json, 'w') as f:
+        #pickle.dump(test_dict, f)
+        json.dump(test_dict, f)
     
     print("TEST ENDS!")
