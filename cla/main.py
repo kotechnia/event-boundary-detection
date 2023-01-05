@@ -65,7 +65,7 @@ if __name__ == '__main__':
         pass
 
     torch.set_printoptions(threshold=np.inf, sci_mode=False)
-    torch.autograd.set_detect_anomaly(True)
+    #torch.autograd.set_detect_anomaly(True)
     _criterion = nn.BCEWithLogitsLoss(reduction='none')
     criterion = nn.BCEWithLogitsLoss()
     basic_mask = get_basic_mask(gap=GAP)

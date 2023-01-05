@@ -46,7 +46,7 @@ GOAL_SCORE = 0.815 # Train ends when validation score gets here
 #PATIENCE = 15 # Patience for early stopping
 PATIENCE = 20 # Patience for early stopping
 
-NUM_WORKERS = 0
+NUM_WORKERS = 4
 
 
 if __name__ == '__main__':
