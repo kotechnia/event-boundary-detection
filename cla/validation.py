@@ -3,7 +3,8 @@ import numpy as np
 from config import *
 import os
 
-def validate(pred_dict, n_fold, score_type='validation'):
+#def validate(pred_dict, n_fold, score_type='validation'):
+def validate(pred_dict, n_fold, score_type='validation', results_path='f1_score.json'):
     # load GT files
 
     #with open(ANNOTATION_PATH, 'r', encoding='utf-8-sig') as f:
@@ -116,7 +117,10 @@ def validate(pred_dict, n_fold, score_type='validation'):
     else:
         f1 = 2*rec*prec/(rec+prec)
     
-    with open(os.path.join('test_dict_f1.pkl'), 'wb') as f:
-        pickle.dump(debugging, f)
+   # with open(os.path.join('test_dict_f1.pkl'), 'wb') as f:
+   #     pickle.dump(debugging, f)
+    with open(os.path.join(results_path), 'w') as f:
+        json.dump(debugging, f, indent=4)
+
 
     return f1, prec, rec

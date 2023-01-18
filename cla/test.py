@@ -10,16 +10,28 @@ from config import *
 from validation import validate
 import argparse
 
+class NpEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        if isinstance(obj, np.floating):
+            return float(obj)
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        return json.JSONEncoder.default(self, obj)
 
 if __name__ == "__main__":
-    network_list=[]
-    test_dataloader = DataLoader(NIA2022_GEBD('test'), batch_size=BATCH_SIZE, shuffle=False)
     
     parser = argparse.ArgumentParser()
     parser.add_argument('--model', default='')
-    parser.add_argument('--results_json', default='')
+    parser.add_argument('--results_pred_json', default='')
+    parser.add_argument('--results_f1_json', default='')
     args = parser.parse_args()
 
+
+    mode='test'
+    test_dataloader = DataLoader(NIA2022_GEBD(mode), batch_size=BATCH_SIZE, shuffle=False)
+    network_list=[]
     device = torch.device('cuda')
     load_model = torch.load(args.model).to(device)
     network_list.append(load_model)
@@ -95,7 +107,7 @@ if __name__ == "__main__":
             test_dict[filename] = boundary
 
     val_dicts[s] = test_dict
-    f1, prec, rec = validate(test_dict, 0, 'test')
+    f1, prec, rec = validate(test_dict, 0, mode, args.results_f1_json)
     f1_results[s] = f1
     prec_results[s] = prec
     rec_results[s] = rec
@@ -105,9 +117,9 @@ if __name__ == "__main__":
     print(f'recall: {rec_results}')
 
 
-    #with open(os.path.join(MODEL_SAVE_PATH,'results/test_ensemble_1') + str(max_value)[2:6]+ '.pkl', 'wb') as f:
-    with open(args.results_json, 'w') as f:
-        #pickle.dump(test_dict, f)
-        json.dump(test_dict, f)
+    with open(args.results_pred_json, 'w') as f:
+        json_dump = json.dumps(test_dict, cls=NpEncoder)
+        json_load = json.loads(json_dump) 
+        json.dump(json_load, f, indent=4)
     
     print("TEST ENDS!")
