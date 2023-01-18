@@ -85,7 +85,9 @@ cla$ python main.py
 
 ❏ 평가 방법입니다.(test)
 ```bash
-cla$ python test.py --model < MODEL_PATH >
+cla$ python test.py --model models/model_cla_f_0_s_-1_7728.pt \
+--results_f1_json results_f1.json \
+--results_pred_json results_prediction.json
 ```
 
 
